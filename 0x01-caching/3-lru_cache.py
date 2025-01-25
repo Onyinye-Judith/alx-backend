@@ -1,37 +1,51 @@
 #!/usr/bin/env python3
-'''Task 3: LRU Caching
-'''
-from collections import OrderedDict
-from base_caching import BaseCaching
+"""
+LRU Caching
+"""
+
+
+from lib2to3.pgen2.token import BACKQUOTE
+from typing import OrderedDict
+
+
+BaseCaching = __import__('base_caching').BaseCaching
+
 
 class LRUCache(BaseCaching):
-    '''A class `LRUCache` that inherits from
-    `BaseCaching` and is a caching system
-                   '''
-                   def __init__(self):
-                   '''initialize the cache
-                   '''
-                   super().__init__()
-                   self.cache_data = OrderedDict()
-                   def put(self, key, item):
-                   """Adds an item in the cache.
-                   """
-                   if key is None or item is None:
-                       return
-                   if key not in self.cache_data:
-                       if len(self.cache_data) + 1 > BaseCaching.MAX_ITEMS:
-                           lru_key, _ = self.cache_data.popitem(True)
-                           print("DISCARD:", lru_key)
+    """
+    class LRUCache that inherits from BaseCaching and is a caching system
+    """
 
-                           self.cache_data[key] = item
-                           self.cache_data.move_to_end(key, last=False)
+    def __init__(self):
+        """
+        Init method
+        """
+        super().__init__()
+        self.lru_order = OrderedDict()
 
-                       else:
+    def put(self, key, item):
+        """
+        Must assign to the dictionary self.cache_data
+        the item value for the key key.
+        """
+        if key and item:
+            self.lru_order[key] = item
+            self.lru_order.move_to_end(key)
+            self.cache_data[key] = item
 
-                           self.cache_data[key] = item
-                           def get(self, key):
-                           """Retrieves an item by key.
-                           """
-                           if key is not None and key in self.cache_data:
-                               self.cache_data.move_to_end(key, last=False)
-                               return self.cache_data.get(key, None)
+        if len(self.cache_data) > BaseCaching.MAX_ITEMS:
+            item_discarded = next(iter(self.lru_order))
+            del self.cache_data[item_discarded]
+            print("DISCARD:", item_discarded)
+
+        if len(self.lru_order) > BaseCaching.MAX_ITEMS:
+            self.lru_order.popitem(last=False)
+
+    def get(self, key):
+        """
+        Must return the value in self.cache_data linked to key.
+        """
+        if key in self.cache_data:
+            self.lru_order.move_to_end(key)
+            return self.cache_data[key]
+        return None
